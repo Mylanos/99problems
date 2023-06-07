@@ -4,8 +4,9 @@ import GHC (ABExport(XABExport))
 import GHC.Stg.Lift.Monad (FloatLang)
 import GHC.Driver.CmdLine (Flag(Flag))
 import GHC.Integer.GMP.Internals (bigNatToInteger)
-import GHC.IO.IOMode (IOMode(ReadMode))
-import System.IO (openFile, hClose, hGetContents)
+import GHC.IO.IOMode
+import System.IO
+
 
 myLast :: [a] -> a
 myLast [x] = x
@@ -93,6 +94,12 @@ bubblesort l1 =
         result = if current_res == next_res then next_res else bubblesort next_res
     in result
 
+mySort:: (Ord a) => [a] -> [a]
+mySort [] = []
+mySort [a] = [a]
+mySort (x:y:xs)
+    | x > y = y: mySort (x:xs)
+    | otherwise = x : mySort (y:xs)
 
 quicksort:: (Ord a) => [a] -> [a]
 quicksort [] = []
@@ -102,12 +109,6 @@ quicksort (x:xs) = smaller ++ [x] ++ bigger
         smaller = quicksort [y | y <- xs, y <= x]
         bigger = quicksort [z | z <- xs, z > x]
 
-mySort:: (Ord a) => [a] -> [a]
-mySort [] = []
-mySort [a] = [a]
-mySort (x:y:xs)
-    | x > y = y: mySort (x:xs)
-    | otherwise = x : mySort (y:xs)
 
 mid:: (Ord a) => [a] -> a
 mid [] = undefined
@@ -220,6 +221,7 @@ readRules fname = do
     let rules = loadLines lns
     (\r -> (return $! myLast r) >> (hClose h >> return r)) $! rules
 
+loadLines :: [[Char]] -> [Rule Char]
 loadLines [] = []
 loadLines (l:ls) = R c popS puS ((read fromS)::Int) ((read l4)::Int) : loadLines ls
     where
@@ -227,3 +229,25 @@ loadLines (l:ls) = R c popS puS ((read fromS)::Int) ((read l4)::Int) : loadLines
         (popS,(_:l2)) = span (/=':') l1
         (puS,(_:l3))  = span (/=':') l2
         (fromS,(_:l4)) = span (/=':') l3
+
+
+data Expr = Var Int | Add Expr Expr | Sub Expr Expr
+
+--pp':: Expr -> String
+--pp' Var a = show a
+--pp' Add 
+
+fx fname = do
+    h <- openFile fname ReadMode
+    o <- openFile (fname ++ ".out") WriteMode
+    c <- hGetContents h
+    hPutStr o $ unlines $ wrap 1 $ lines c
+    hClose o
+    hClose h
+    
+wrap n (a:b:ls)
+    | (length a + length b) <= 120 = wrap n ((a++b):ls)
+    | True = (show n ++ ":" ++ a) : wrap (n+1) (b:ls)
+wrap n [l] = [show n ++ ":" ++ l]
+wrap _ [] = []
+

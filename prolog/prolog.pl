@@ -83,3 +83,45 @@ is_palindrome(L) :- reverse(L, L2), L2 == L.
 
 
 my_flatten([X|Xs], RESULT) :- append(X, Xs, NEWLIST), my_flatten(NEWLIST, RESULT).
+
+
+    
+% alebo ina verzia:
+genV(S,E,S):- S < (E + 1).
+genV(S, E, V):- S < (E + 1), NS is S + 1, genV(NS, E, V).
+
+solve(Xm, Ym, X, Y, Z) :-
+    genV(1, Xm, X),
+    genV(1, Ym, Y),
+    L is X * X + Y * Y,
+    genV(1, L, M),
+    Z is M*M,
+    Z == L.
+
+resolve(Xm, Ym, ResL, ResR, X, Y, Z) :-
+    genV(1, Xm, X),
+    genV(1, Ym, Y),
+    L is ResL,
+    genV(1, L, Z),
+    P is ResR,
+    P == L.
+
+
+
+cel(N,[_|T]) :- N>0, NN is N-1, cel(NN,T).
+cel(N,[]) :-  N =< 0.
+
+fv(E,Vs) :- fv3(E,[],Vs).
+    
+fv3(var(V),Bs,[]) :- member(V,Bs), !.
+fv3(var(V),_,[V]).
+fv3(app(E1,E2),Bs,Vs) :- fv3(E1,Bs,V1), fv3(E2,Bs,V2), uni(V1,V2,Vs).
+fv3(abs(V,E),Bs,Vs) :- fv3(E,[V|Bs],Vs).
+
+uni([], L, L).
+uni([X|Xs], R, Ys) :-
+    member(X, R), !, uni(Xs, R, Ys).
+uni([X|Xs], R, [X|Ys]) :- uni(Xs, R, Ys).
+
+heh(_,[]) :- !.
+heh([Y|Ys], [X|Xs]) :- X == Y, heh(Ys, Xs).
